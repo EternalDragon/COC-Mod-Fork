@@ -5,7 +5,7 @@
 	import classes.Items.Armors.GooArmor;
 	import classes.Items.WeaponLib;
 	import classes.Saves;
-
+	
 	import coc.view.MainView;
 
 	//import flash.events.MouseEvent;
@@ -529,7 +529,6 @@
 		}
 
 		private function isAHerm():void {
-			kGAMECLASS.tooltipLoc = "HermBuild";
 			player.gender = GENDER_HERM;
 			//Attributes
 			player.str+=1;
@@ -555,13 +554,13 @@
 			//Choices
 			outputText("\n\nYou are a hermaphrodite.  Your upbringing has provided you an average in stats.\n\nWhat type of build do you have?", true);
 			menu();
-			addButton(0, "Fem. Slender", buildSlenderFemale);
-			addButton(1, "Fem. Average", buildAverageFemale);
-			addButton(2, "Fem. Curvy", buildCurvyFemale);
+			addButton(0, "Fem. Slender", buildSlenderFemale, null, null, null, "Feminine build. \n\nWill make you a futanari.", "Feminine, Slender");
+			addButton(1, "Fem. Average", buildAverageFemale, null, null, null, "Feminine build. \n\nWill make you a futanari.", "Feminine, Average");
+			addButton(2, "Fem. Curvy", buildCurvyFemale, null, null, null, "Feminine build. \n\nWill make you a futanari.", "Feminine, Curvy");
 			//addButton(4, "Androgynous", chooseBodyTypeAndrogynous);
-			addButton(5, "Mas. Lean", buildLeanMale);
-			addButton(6, "Mas. Average", buildAverageMale);
-			addButton(7, "Mas. Thick", buildThickMale);
+			addButton(5, "Mas. Lean", buildLeanMale, null, null, null, "Masculine build. \n\nWill make you a maleherm.", "Masculine, Lean");
+			addButton(6, "Mas. Average", buildAverageMale, null, null, null, "Masculine build. \n\nWill make you a maleherm.", "Masculine, Average");
+			addButton(7, "Mas. Thick", buildThickMale, null, null, null, "Masculine build. \n\nWill make you a maleherm.", "Masculine, Thick");
 		}
 		
 		
@@ -2878,7 +2877,7 @@
 			player.hunger = 80;
 			menu()
 			for (var i:int = 0; i < 14; i++) {
-				addButton(i, "Slot " + (i + 1), chooseSlotHardcore, i);
+				addButton(i, "Slot " + (i + 1), chooseSlotHardcore, (i + 1));
 			}
 			addButton(14, "Back", chooseGameModes);
 		}
@@ -2891,7 +2890,7 @@
 			player.hunger = 80;
 			menu()
 			for (var i:int = 0; i < 14; i++) {
-				addButton(i, "Slot " + (i + 1), chooseSlotHardcore, i);
+				addButton(i, "Slot " + (i + 1), chooseSlotHardcore, (i + 1));
 			}
 			addButton(14, "Back", chooseGameModes);
 		}	

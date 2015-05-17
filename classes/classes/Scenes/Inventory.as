@@ -67,6 +67,7 @@ package classes.Scenes
 			hideMenus();
 			hideUpDown();
 			clearOutput();
+			kGAMECLASS.displayHeader("Inventory");
 			outputText("<b><u>Equipment:</u></b>\n");
 			outputText("<b>Weapon:</b> " + player.weapon.name + " (Attack: " + player.weaponAttack + ")\n");
 			outputText("<b>Shield:</b> " + player.shield.name + " (Block Rating: " + player.shieldBlock + ")\n");
@@ -540,42 +541,41 @@ package classes.Scenes
 		}
 		
 		public function manageEquipment():void {
-			outputText("Which would you like to unequip?", true)
+			clearOutput();
+			outputText("Which would you like to unequip?\n\n");
 			menu();
 			if (player.weapon != WeaponLib.FISTS)
 			{
-				addButton(0, "Weapon", unequipWeapon, null, null, null, player.weapon.description);
+				addButton(0, "Weapon", unequipWeapon, null, null, null, player.weapon.description, capitalizeFirstLetter(player.weapon.name));
 			}
 			if (player.shield != ShieldLib.NOTHING)
 			{
-				addButton(1, "Shield", unequipShield, null, null, null, player.shield.description);
+				addButton(1, "Shield", unequipShield, null, null, null, player.shield.description, capitalizeFirstLetter(player.shield.name));
 			}
 			if (player.jewelry != JewelryLib.NOTHING)
 			{
-				addButton(2, "Accessory", unequipJewel, null, null, null, player.jewelry.description);
+				addButton(2, "Accessory", unequipJewel, null, null, null, player.jewelry.description, capitalizeFirstLetter(player.jewelry.name));
 			}
 			if (player.armor != ArmorLib.NOTHING)
 			{
-				addButton(5, "Armour", unequipArmor, null, null, null, player.armor.description);
+				addButton(5, "Armour", unequipArmor, null, null, null, player.armor.description, capitalizeFirstLetter(player.armor.name));
 			}
 			if (player.upperGarment != UndergarmentLib.NOTHING)
 			{
-				addButton(6, "Upperwear", unequipUpperwear, null, null, null, player.upperGarment.description);
+				addButton(6, "Upperwear", unequipUpperwear, null, null, null, player.upperGarment.description, capitalizeFirstLetter(player.upperGarment.name));
 			}
 			if (player.lowerGarment != UndergarmentLib.NOTHING)
 			{
-				addButton(7, "Lowerwear", unequipLowerwear, null, null, null, player.lowerGarment.description);
+				addButton(7, "Lowerwear", unequipLowerwear, null, null, null, player.lowerGarment.description, capitalizeFirstLetter(player.lowerGarment.name));
 			}			
 			addButton(14, "Back", inventoryMenu);
 			
 		}
 		//Unequip!
 		private function unequipWeapon():void {
-			clearOutput();
 			takeItem(player.setWeapon(WeaponLib.FISTS), inventoryMenu);
 		}
 		public function unequipArmor():void {
-			clearOutput();
 			if (player.armorName != "goo armor") takeItem(player.setArmor(ArmorLib.NOTHING), inventoryMenu); 
 			else { //Valeria belongs in the camp, not in your inventory!
 				player.armor.removeText();
@@ -584,19 +584,15 @@ package classes.Scenes
 			}
 		}
 		public function unequipUpperwear():void {
-			clearOutput();
 			takeItem(player.setUndergarment(UndergarmentLib.NOTHING, UndergarmentLib.TYPE_UPPERWEAR), inventoryMenu);
 		}
 		public function unequipLowerwear():void {
-			clearOutput();
 			takeItem(player.setUndergarment(UndergarmentLib.NOTHING, UndergarmentLib.TYPE_LOWERWEAR), inventoryMenu);
 		}
 		public function unequipJewel():void {
-			clearOutput();
 			takeItem(player.setJewelry(JewelryLib.NOTHING), inventoryMenu);
 		}
 		public function unequipShield():void {
-			clearOutput();
 			takeItem(player.setShield(ShieldLib.NOTHING), inventoryMenu);
 		}
 

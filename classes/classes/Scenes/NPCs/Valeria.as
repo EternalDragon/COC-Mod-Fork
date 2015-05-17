@@ -40,7 +40,6 @@
 
 //Camp Menu -- [Followers] -- [Valeria]
 public function valeriaFollower():void {
-	kGAMECLASS.tooltipLoc = "Valeria"
 	spriteSelect(79);
 	clearOutput();
 	outputText("You walk over to Valeria.  Seeing you approach, the armor-goo turns a slightly brighter shade of blue beneath her plates and grins.");
@@ -51,7 +50,7 @@ public function valeriaFollower():void {
 	addButton(1, "Spar", valeriaSpar, null, null, null, "Do a quick battle with Valeria!");
 	if (player.lust >= 33) addButton(2, "Sex", followersValeriaSex, null, null, null, "Initiate sexy time with the armor-goo.");
 	addButton(3, "Talk", talkWithValeria, null, null, null, "Discuss with Valeria.");
-	addButton(4, "Take", takeValeria, null, null, null, "This shining suit of platemail is more than just platemail - it houses the goo-girl, Valeria!  Together, they provide one tough defense, but you had better be okay with having goo handling your junk while you fight if you wear this! \n\nType: Heavy armor \nDefense: 22 \nSpecial: Regeneration and Increased Fantasize");
+	addButton(4, "Take", takeValeria, null, null, null, armors.GOOARMR.description);
 	addButton(14, "Back", camp.campFollowers);
 }
 
@@ -540,7 +539,7 @@ public function valeriaAndGooThreeStuff():void {
 	else outputText("playfully comment that she really ought to release you");
 	outputText(", but the troublesome, liquid armor shakes her head negatively.");
 	outputText("\n\n\"<i>You just sit tight, [name]. I'm gonna give my sister a fun new experience and fill you with so much pleasure that you'll feel like you're gonna pop.</i>\" She disappears back into the azure blob before you can respond. The fading ripples almost mock your inability to reply as they smooth into nonexistence.");
-	dynStats("lus=", 100);
+	dynStats("lus=", player.maxLust());
 	menu();
 	addButton(0,"Next",valeriaGooRapeII);
 }

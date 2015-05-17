@@ -284,6 +284,10 @@ use namespace kGAMECLASS;
 				if (speedBonus > 15) speedBonus = 15;
 			}
 			armorDef += speedBonus
+			//Acupuncture effect
+			if (findPerk(PerkLib.ChiReflowDefense) >= 0) armorDef *= UmasShop.NEEDLEWORK_DEFENSE_DEFENSE_MULTI;
+			if (findPerk(PerkLib.ChiReflowAttack) >= 0) armorDef *= UmasShop.NEEDLEWORK_ATTACK_DEFENSE_MULTI;
+			armorDef = Math.round(armorDef);
 			//Berzerking removes armor
 			if(findStatusAffect(StatusAffects.Berzerking) >= 0) {
 				armorDef = 0;
@@ -538,41 +542,16 @@ use namespace kGAMECLASS;
 			else this._lowerGarment = value;
 		}
 		
-		public function getDamageResistancePercent(apply:Boolean = true):Number {
-			var mult:Number = 1;
-			//Black cat beer = 25% reduction!
-			if (statusAffectv1(StatusAffects.BlackCatBeer) > 0)
-				mult *= 0.75;
-
-			//Take damage you masochist!
-			if (findPerk(PerkLib.Masochist) >= 0 && lib >= 60) {
-				mult *= 0.7;
-				game.dynStats("lus", 2);
-			}
-			if (findPerk(PerkLib.ImmovableObject) >= 0 && tou >= 75) {
-				mult *= 0.8;
-			}
-			// Uma's Massage bonuses
-			var statIndex:int = findStatusAffect(StatusAffects.UmasMassage);
-			if (statIndex >= 0) {
-				if (statusAffect(statIndex).value1 == UmasShop.MASSAGE_RELAXATION) {
-					mult *= statusAffect(statIndex).value2;
-				}
-			}
-			//Caps damage reduction at 60%.
-			if (mult < 0.4) mult = 0.4;
-			return mult;
-		}
-		
 		public function reduceDamage(damage:Number):Number {
-			if (tou < 100) damage = int(damage - rand(tou) - armorDef);
-			else damage = int(damage - rand(100) - armorDef);
+			var damageMultiplier:Number = 1;
 			//EZ MOAD half damage
-			if (flags[kFLAGS.EASY_MODE_ENABLE_FLAG] == 1) damage /= 2;
+			if (flags[kFLAGS.EASY_MODE_ENABLE_FLAG] == 1) damageMultiplier /= 2;
 			//Difficulty modifier flags.
-			if (flags[kFLAGS.GAME_DIFFICULTY] == 1) damage *= 1.15;
-			else if (flags[kFLAGS.GAME_DIFFICULTY] == 2) damage *= 1.3;
-			else if (flags[kFLAGS.GAME_DIFFICULTY] >= 3) damage *= 1.5;
+			if (flags[kFLAGS.GAME_DIFFICULTY] == 1) damageMultiplier *= 1.15;
+			else if (flags[kFLAGS.GAME_DIFFICULTY] == 2) damageMultiplier *= 1.3;
+			else if (flags[kFLAGS.GAME_DIFFICULTY] >= 3) damageMultiplier *= 1.5;
+
+			
 			//Opponents can critical too!
 			var crit:Boolean = false
 			if(rand(100) <= 4 || (kGAMECLASS.monster.findPerk(PerkLib.Tactician) >= 0 && kGAMECLASS.monster.inte >= 50 && (kGAMECLASS.monster.inte - 50)/5 > rand(100))) {
@@ -585,17 +564,9 @@ use namespace kGAMECLASS;
 				if (damage < 1) damage = 1;
 			}
 			//Apply damage resistance percentage.
-			damage *= getDamageResistancePercent();
-			if (damage < 1) damage = 1;
-
-			// Uma's Accupuncture Bonuses
-			var modArmorDef:Number = 0;
-			if (findPerk(PerkLib.ChiReflowDefense) >= 0) modArmorDef = ((armorDef * UmasShop.NEEDLEWORK_DEFENSE_DEFENSE_MULTI) - armorDef);
-			if (findPerk(PerkLib.ChiReflowAttack) >= 0) modArmorDef = ((armorDef * UmasShop.NEEDLEWORK_ATTACK_DEFENSE_MULTI) - armorDef);
-			damage -= modArmorDef;
-			if (damage < 0) damage = 0;
-			if (damage < 1 && crit) damage = 1; //Minimum critical damage is 1.
-			return damage;
+			damage *= damagePercent() / 100;
+			if (damageMultiplier < 0.2) damageMultiplier = 0;
+			return int(damage * damageMultiplier);
 		}
 
 		public function takeDamage(damage:Number, display:Boolean = false):Number{
@@ -1018,6 +989,8 @@ use namespace kGAMECLASS;
 			var counter:int = 0;
 			if (findStatusAffect(StatusAffects.BlackNipples) >= 0)
 				counter++;
+			if (findStatusAffect(StatusAffects.Uniball) >= 0)
+				counter++;
 			if (hasVagina() && vaginaType() == 5)
 				counter++;
 			if (eyeType == 2)
@@ -1315,11 +1288,11 @@ use namespace kGAMECLASS;
 				dragonCounter++;
 			if (dragonCocks() > 0)
 				dragonCounter++;
-			if (wingType == 10)
+			if (wingType == 10 || wingType == 11)
 				dragonCounter++;
-			if (wingType == 11)
-				dragonCounter += 2;
 			if (lowerBody == 18)
+				dragonCounter++;
+			if (horns > 0 && (hornType == 3 || hornType == 4))
 				dragonCounter++;
 			if (skinType == 2 && dragonCounter > 0)
 				dragonCounter++;
@@ -1661,7 +1634,7 @@ use namespace kGAMECLASS;
 					hunger = 100;
 				}
 				if (hunger > oldHunger && flags[kFLAGS.USE_OLD_INTERFACE] == 0) kGAMECLASS.mainView.statsView.showStatUp('hunger');
-				game.dynStats("lus", 0, "resisted", false);
+				//game.dynStats("lus", 0, "resisted", false);
 				if (nl) outputText("\n");
 				//Messages
 				if (hunger < 10) outputText("<b>You still need to eat more. </b>");
@@ -1671,10 +1644,11 @@ use namespace kGAMECLASS;
 				else if (hunger >= 75 && hunger < 90) outputText("<b>You feel so satisfied. </b>");
 				else if (hunger >= 90) outputText("<b>Your stomach feels so full. </b>");
 				if (weightChange > 0) outputText("<b>You feel like you've put on some weight. </b>");
-				kGAMECLASS.awardAchievement("Tastes Like Chicken\n", kACHIEVEMENTS.REALISTIC_TASTES_LIKE_CHICKEN);
-				if (oldHunger < 1 && hunger >= 100) kGAMECLASS.awardAchievement("Champion Needs Food Badly\n", kACHIEVEMENTS.REALISTIC_CHAMPION_NEEDS_FOOD);
-				if (oldHunger >= 90) kGAMECLASS.awardAchievement("Glutton\n", kACHIEVEMENTS.REALISTIC_GLUTTON);
-				//kGAMECLASS.mainView.statsView.showStatUp("hunger");
+				kGAMECLASS.awardAchievement("Tastes Like Chicken ", kACHIEVEMENTS.REALISTIC_TASTES_LIKE_CHICKEN);
+				if (oldHunger < 1 && hunger >= 100) kGAMECLASS.awardAchievement("Champion Needs Food Badly ", kACHIEVEMENTS.REALISTIC_CHAMPION_NEEDS_FOOD);
+				if (oldHunger >= 90) kGAMECLASS.awardAchievement("Glutton ", kACHIEVEMENTS.REALISTIC_GLUTTON);
+				if (hunger > oldHunger) kGAMECLASS.mainView.statsView.showStatUp("hunger");
+				game.dynStats("lus", 0, "resisted", false);
 				kGAMECLASS.statScreenRefresh();
 			}
 		}

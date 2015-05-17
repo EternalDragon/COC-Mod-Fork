@@ -1,5 +1,4 @@
-﻿import classes.perkClass;
-import classes.PerkClass;
+﻿import classes.PerkClass;
 import flash.text.TextFormat;
 import classes.MainViewHack;
 // // import flash.events.MouseEvent;
@@ -28,8 +27,6 @@ import classes.MainViewHack;
 // oldStats.oldLust = 0;
 // 
 // model.maxHP = maxHP;
-
-public var styleHack:MainViewHack = new MainViewHack();
 
 public function maxHP():Number {
 	return player.maxHP();
@@ -207,24 +204,27 @@ public function outputText(output:String,
 
 public function flushOutputTextToGUI():void
 {
-	var fmt:TextFormat;
-	if (flags[kFLAGS.CUSTOM_FONT_SIZE] != 0 || flags[kFLAGS.USE_DARK_BACKGROUND] != 0)
-	{
-		fmt = mainView.mainText.getTextFormat();
-		if (flags[kFLAGS.CUSTOM_FONT_SIZE] != 0) fmt.size = flags[kFLAGS.CUSTOM_FONT_SIZE];
-		if (flags[kFLAGS.USE_DARK_BACKGROUND] != 0) fmt.color = 0xFFFFFF;
-	}
-	mainView.setOutputText( currentText );
+	var fmt:TextFormat = mainView.mainText.getTextFormat();
 	
-	if (flags[kFLAGS.CUSTOM_FONT_SIZE] != 0 || flags[kFLAGS.USE_DARK_BACKGROUND] != 0)
+	if (flags[kFLAGS.CUSTOM_FONT_SIZE] != 0) fmt.size = flags[kFLAGS.CUSTOM_FONT_SIZE];
+	
+	mainView.setOutputText(currentText);
+	
+	if (flags[kFLAGS.CUSTOM_FONT_SIZE] != 0)
 	{
 		mainView.mainText.setTextFormat(fmt);
 	}
+	if (mainViewHack.mainColorArray[flags[kFLAGS.BACKGROUND_STYLE]] != null) mainView.mainText.textColor = mainViewHack.mainColorArray[flags[kFLAGS.BACKGROUND_STYLE]];
+}
+
+public function displayHeader(string:String):void {
+	outputText("<font size=\"36\" face=\"Georgia\"><u>" + string + "</u></font>\n");
 }
 
 public function displayPerks(e:MouseEvent = null):void {
 	var temp:int = 0;
 	clearOutput();
+	displayHeader("Perks");
 	while(temp < player.perks.length) {
 		outputText("<b>" + player.perk(temp).perkName + "</b> - " + player.perk(temp).perkDesc + "\n", false);
 		temp++;
@@ -434,15 +434,16 @@ private function attributeMenu():void {
 	else outputText("" + Math.floor(player.inte) + " (Maximum)\n", false)
 
 	menu();
-	addButton(0, "Add Strength", addStr);
-	addButton(1, "Add Toughness", addTou);
-	addButton(2, "Add Speed", addSpe);
-	addButton(3, "Add Intelligence", addInt);
-	
-	addButton(5, "Sub Strength", subStr);
-	addButton(6, "Sub Toughness", subTou);
-	addButton(7, "Sub Speed", subSpe);
-	addButton(8, "Sub Intelligence", subInt);
+	//Add
+	addButton(0, "Add STR", addStr, null, null, null, "Add 1 to strength.", "Add Strength");
+	addButton(1, "Add TOU", addTou, null, null, null, "Add 1 to toughness.", "Add Toughness");
+	addButton(2, "Add SPE", addSpe, null, null, null, "Add 1 to speed.", "Add Speed");
+	addButton(3, "Add INT", addInt, null, null, null, "Add 1 to intelligence.", "Add Intelligence");
+	//Subtract
+	addButton(5, "Sub STR", subStr, null, null, null, "Subtract 1 from strength.", "Subtract Strength");
+	addButton(6, "Sub TOU", subTou, null, null, null, "Subtract 1 from toughness.", "Subtract Toughness");
+	addButton(7, "Sub SPE", subSpe, null, null, null, "Subtract 1 from speed.", "Subtract Speed");
+	addButton(8, "Sub INT", subInt, null, null, null, "Subtract 1 from intelligence.", "Subtract Intelligence");
 	
 	addButton(4, "Reset", resetAttributes);
 	addButton(9, "Done", finishAttributes);
@@ -472,6 +473,7 @@ public function levelUpGo(e:MouseEvent = null):void {
 		outputText("<b>You are now level " + num2Text(player.level) + "!</b>\n\nYou have gained five attribute points and one perk point!", true);
 		doNext(attributeMenu);
 	}
+	//Spend attribute points
 	else if(player.statPoints > 0) {
 		attributeMenu();
 	}
@@ -764,7 +766,7 @@ public function buildPerkList():Array {
 			_add(new PerkClass(PerkLib.Seduction));
 	}
 	//Slot 7 - Nymphomania
-	else if(player.findPerk(PerkLib.CorruptedLibido) >= 0 && player.cor >= 75) {
+	if(player.findPerk(PerkLib.CorruptedLibido) >= 0 && player.cor >= 75) {
 			_add(new PerkClass(PerkLib.Nymphomania));
 	}
 	//Slot 7 - UNFINISHED :3
@@ -863,6 +865,34 @@ public function getButtonText(index:int):String {
 	}
 }
 
+public function getButtonToolTipHeader(buttonText:String):String
+{
+	var toolTipHeader:String;
+	
+	if (buttonText.indexOf(" x") != -1)
+	{
+		buttonText = buttonText.split(" x")[0];
+	}
+	
+	//Get items
+	var itype:ItemType = ItemType.lookupItem(buttonText);
+	var temp:String = "";
+	if (itype != null) temp = itype.longName;
+	itype = ItemType.lookupItemByShort(buttonText);
+	if (itype != null) temp = itype.longName;
+	if (temp != "") {
+		temp = capitalizeFirstLetter(temp);
+		toolTipHeader = temp;
+	}
+	
+	//Set tooltip header to button.
+	if (toolTipHeader == null) {
+		toolTipHeader = buttonText;
+	}
+	
+	return toolTipHeader;
+}
+
 // Returns a string or undefined.
 public function getButtonToolTipText(buttonText:String):String
 {
@@ -886,167 +916,19 @@ public function getButtonToolTipText(buttonText:String):String
 	itype = ItemType.lookupItemByShort(buttonText);
 	if (itype != null) toolTipText = itype.description;
 
-
-	//-----------
-	//-- CHAR BUILD 
-	//-----------
-	if (kGAMECLASS.tooltipLoc == "HermBuild") {
-		if (buttonText == "Fem. Slender") {
-			toolTipText = "Feminine build. \n\nWill make you a futanari.";
-		}
-		if (buttonText == "Fem. Average") {
-			toolTipText = "Feminine build. \n\nWill make you a futanari.";
-		}
-		if (buttonText == "Fem. Curvy") {
-			toolTipText = "Feminine build. \n\nWill make you a futanari.";
-		}
-		if (buttonText == "Mas. Lean") {
-			toolTipText = "Masculine build. \n\nWill make you a maleherm.";
-		}
-		if (buttonText == "Mas. Average") {
-			toolTipText = "Masculine build. \n\nWill make you a maleherm.";
-		}
-		if (buttonText == "Mas. Thick") {
-			toolTipText = "Masculine build. \n\nWill make you a maleherm.";
-		}
-	}
-	//-----------
-	//-- COMBAT 
-	//-----------
-	//Combat Menu
-	if (buttonText == "Attack") {
-		if (!inCombat) toolTipText = "";
-		else toolTipText = "Attempt to attack the enemy with your " + player.weaponName + ".  Damage done is determined by your strength and weapon.";
-	}
-	if(buttonText == "Tease") {
-		if (!inCombat) toolTipText = "";
-		else toolTipText = "Attempt to make an enemy more aroused by striking a seductive pose and exposing parts of your body.";
-	}
-	if(buttonText.indexOf("Spells") != -1) {
-		toolTipText = "Opens your spells menu, where you can cast any spells you have learned.  Beware, casting spells increases your fatigue, and if you become exhausted you will be easier to defeat.";
-	}	
-	if(buttonText == "Items") {
-		toolTipText = "The inventory allows you to use an item.  Be careful as this leaves you open to a counterattack when in combat.";
-	}
-	if(buttonText.indexOf("P. Specials") != -1) {
-		toolTipText = "Physical special attack menu.";
-	}
-	if(buttonText.indexOf("M. Specials") != -1) {
-		toolTipText = "Mental and supernatural special attack menu.";
-	}
-	if(buttonText.indexOf("Fantasize") != -1) {
-		toolTipText = "Fantasize about your opponent in a sexual way.  Its probably a pretty bad idea to do this unless you want to end up getting raped.";
-	}
-	if(buttonText.indexOf("Wait") != -1 && gameState > 0) {                        
-		toolTipText = "Take no action for this round.  Why would you do this.  This is a terrible idea.";
-	}
-	if(buttonText == "Run") {
-		toolTipText = "Choosing to run will let you try to escape from your enemy. However, it will be hard to escape enemies that are faster than you and if you fail, your enemy will get a free attack.";
-	}
-	if(buttonText.indexOf("Defend") != -1) {
+	//------------
+	// COMBAT 
+	//------------
+	if(buttonText.indexOf("Defend") != -1) { //Not used at the moment.
 		toolTipText = "Selecting defend will reduce the damage you take by 66 percent, but will not affect any lust incurred by your enemy's actions.";
 	}
-	if(buttonText.indexOf("Fantasize") != -1) {
-		toolTipText = "Fantasize about your opponent in a sexual way.  It's probably a pretty bad idea to do this unless you want to end up getting raped.";
-	}
-	//Spells
-	if(buttonText.indexOf("Charge W.") != -1) {                        
-		toolTipText = "The Charge Weapon spell will surround your weapon in electrical energy, causing it to do even more damage.  The effect lasts for the entire combat.  (Fatigue Cost: " + spellCost(15) + ")";
-	}
-	if(buttonText.indexOf("Blind") != -1) {                        
-		toolTipText = "Blind is a fairly self-explanatory spell.  It will create a bright flash just in front of the victim's eyes, blinding them for a time.  However if they blink it will be wasted.  (Fatigue Cost: " + spellCost(20) + ")";
-	}
-	if(buttonText.indexOf("Whitefire") != -1) {                        
-		toolTipText = "Whitefire is a potent fire based attack that will burn your foe with flickering white flames, ignoring their physical toughness and most armors.  (Fatigue Cost: " + spellCost(30) + ")";
-	}
-	if(buttonText.indexOf("Arouse") != -1) {                        
-		if (!inCombat) toolTipText = "";
-		else toolTipText = "The arouse spell draws on your own inner lust in order to enflame the enemy's passions.  (Fatigue Cost: " + spellCost(15) + ")";
-	}
-	if(buttonText == "Heal") {                        
-		toolTipText = "Heal will attempt to use black magic to close your wounds and restore your body, however like all black magic used on yourself, it has a chance of backfiring and greatly arousing you.  (Fatigue Cost: " + spellCost(20) + ")";
-	}
-	if(buttonText.indexOf("Might") != -1) {                        
-		toolTipText = "The Might spell draws upon your lust and uses it to fuel a temporary increase in muscle size and power.  It does carry the risk of backfiring and raising lust, like all black magic used on oneself.  (Fatigue Cost: " + spellCost(25) + ")";
-	}
-	if(buttonText.indexOf("C.Palm") != -1) {                        
-		toolTipText = "Unleash the power of your cleansing aura! More effective against corrupted opponents. Doesn't work on the pure.  (Fatigue Cost: " + spellCost(30) + ")";
-	}
-	//Wait
-	if(buttonText.indexOf("Wait") != -1 && inCombat) {                        
-		toolTipText = "Take no action for this round.  Why would you do this?  This is a terrible idea.";
-	}
-	
-	//Urta's specials
-	if(buttonText == "Combo") {
-		toolTipText = "Make a three-hit combo.  Each attack has an extra 33% chance to miss, unless the target is blind. (25 Fatigue)";
-	}
-	if(buttonText == "Vault") {
-		toolTipText = "Make a vaulting attack for an extra 25% damage.  Automatically crits stunned foes.  (20 Fatigue)";
-	}
-	if(buttonText == "Sidewinder") {
-		toolTipText = "An attack that hits for reduced damage but has a high chance of stunning. (10 Fatigue)";
-	}
-	if(buttonText == "Dirt Kick") {
-		toolTipText = "Attempt to blind your foe with a spray of kicked dirt. (5 Fatigue)";
-	}
-	if(buttonText == "Metabolize") {
-		toolTipText = "Convert 10% of your maximum HP into fatigue.";
-	}
-	if(buttonText == "SecondWind") {
-		toolTipText = "Regain 50% of your HP, 50 fatigue, and reduce lust by 50 once per fight.";
-	}
-	//P. Special attacks
-	if(buttonText.indexOf("AnemoneSting") != -1) {
-		toolTipText = "Attempt to strike an opponent with the stinging tentacles growing from your scalp.  Reduces enemy speed and increases enemy lust.";
-	}
-	if(buttonText.indexOf("Constrict") != -1) {
-		toolTipText = "Attempt to bind an enemy in your long snake-tail.";
-	}
-	if(buttonText.indexOf("Gore") != -1) {
-		toolTipText = "Lower your head and charge your opponent, attempting to gore them on your horns.  This attack is stronger and easier to land with large horns.";
-	}
-	if(buttonText.indexOf("Infest") != -1) {
-		toolTipText = "The infest attack allows you to cum at will, launching a stream of semen and worms at your opponent in order to infest them.  Unless your foe is very aroused they are likely to simply avoid it.  Only works on males or herms.";
-	}
-	if(buttonText == "Kick") {
-		toolTipText = "Attempt to kick an enemy using your powerful lower body.";
-	}
-	if(buttonText == "Kiss") {
-		toolTipText = "Attempt to kiss your foe on the lips with drugged lipstick.  It has no effect on those without a penis.";
-	}
-	if(buttonText.length == 5 && buttonText.indexOf("Sting") != -1) {                        
-		toolTipText = "Attempt to use your venomous bee stinger on an enemy.  Be aware it takes quite a while for your venom to build up, so depending on your abdomen's refractory period, you may have to wait quite a while between stings.  Venom: " + Math.floor(player.tailVenom) + "/100";
-	}
-	if(buttonText.indexOf("Tail Whip") != -1) {
-		toolTipText = "Whip your foe with your tail to enrage them and lower their defense!";
-	}
-	if(buttonText.indexOf("Web") != -1) {
-		toolTipText = "Attempt to use your abdomen to spray sticky webs at an enemy and greatly slow them down.  Be aware it takes a while for your webbing to build up.  Web Amount: " + Math.floor(player.tailVenom) + "/100";
-	}
-	if(gameState == 1 && buttonText.indexOf("Bow") != -1) {
-		toolTipText = "Use a bow to fire an arrow at your opponent.";
-	}
+	//Urta's specials - MOVED
+	//P. Special attacks - MOVED
+	//M. Special attacks - MOVED
 
-	//M. Special attacks
-	if(buttonText == "Berserk") {
-		toolTipText = "Throw yourself into a rage!  Greatly increases the strength of your weapon and increases lust resistance, but your armor defense is reduced to zero!";
-	}
-	if(buttonText.indexOf("Possess") != -1) {                        
-		toolTipText = "Attempt to temporarily possess a foe and force them to raise their own lusts.";
-	}
-	if(buttonText.indexOf("Dragonfire") != -1) {                        
-		toolTipText = "Unleash fire from your mouth.";
-	}
-
-	//Salon
-	if(buttonText.indexOf("Sand Facial") != -1) {
-		toolTipText = "The goblins promise this facial will give you a rough, handsome look thanks to their special, timeless sands.";
-	}
-	if(buttonText.indexOf("Mud Facial") != -1) {
-		toolTipText = "This facial is supposed to enhance the softness of your face and enhance its femininity greatly.";
-	}
-	
+	//------------
+	// MASTURBATION 
+	//------------
 	//Masturbation Toys
 	if(buttonText == "Masturbate") {
 		toolTipText = "Selecting this option will make you attempt to manually masturbate in order to relieve your lust buildup.";
@@ -1091,257 +973,9 @@ public function getButtonToolTipText(buttonText:String):String
 	if(buttonText.indexOf("Hentai Comic") != -1) {
 		toolTipText = "This oddly drawn comic book is filled with images of fornication, sex, and overly large eyeballs.";
 	}
-	//---------
-	//-- CAMP 
-	//---------
-	//MENUS
-	if (tooltipLoc == "") {
-	if(buttonText.indexOf("Explore") != -1) {                
-		toolTipText = "Explore to find new regions and visit any discovered regions.";
-	}
-	if(buttonText.indexOf("Places") != -1) {
-		toolTipText = "Visit any places you have discovered so far.";
-	}
-	if(buttonText == "Inventory") {
-		toolTipText = "The inventory allows you to use an item.  Be careful as this leaves you open to a counterattack when in combat.";
-	}
-	if(buttonText.indexOf("Stash") != -1) {                
-		toolTipText = "The stash allows you to store your items safely until you need it later.";
-	}
-	if(buttonText.indexOf("Followers") != -1) {
-		toolTipText = "Check up on any followers or companions who are joining you in or around your camp.  You'll probably just end up sleeping with them.";
-	}
-	if(buttonText.indexOf("Lovers") != -1) {
-		toolTipText = "Check up on any lovers you have invited so far to your camp and interact with them.";
-	}
-	if(buttonText.indexOf("Slaves") != -1) {
-		toolTipText = "Check up on any slaves you have received and interact with them.";
-	}
-	if(buttonText.indexOf("Camp Actions") != -1) {
-		toolTipText = "Interact with the camp surroundings and also read your codex.";
-	}
-	if(buttonText == "Masturbate") {
-		toolTipText = "Selecting this option will attempt to manually masturbate in order to relieve your lust buildup.";
-	}
-	if(buttonText == "Meditate") {
-		toolTipText = "Selecting this option will attempt to meditate in order to reduce lust and corruption.";
-	}
-	//EXPLORE MENU
-	if(buttonText.indexOf("Desert") != -1) {
-		toolTipText = "Visit the dry desert. \n\nRecommended level: 2";
-		if (debug) toolTipText += "\n\nTimes explored: " + player.exploredDesert;
-	}
-	if(buttonText.indexOf("Forest") != -1) {
-		toolTipText = "Visit the lush forest. \n\nRecommended level: 1";
-		if (player.level < 6) toolTipText += "\n\nBeware of Tentacle Beasts!"
-		if (debug) toolTipText += "\n\nTimes explored: " + player.exploredForest;
-	}
-	if(buttonText.indexOf("Lake") != -1) {
-		toolTipText = "Visit the lake and explore the beach. \n\nRecommended level: 1";
-		if (player.level < 2) toolTipText += "\n\nNo goo-girl and slime encounters until level 2.";
-		if (debug) toolTipText += "\n\nTimes explored: " + player.exploredLake;
-	}
-	if(buttonText.indexOf("Plains") != -1) {
-		toolTipText = "Visit the plains. \n\nRecommended level: 10";
-		if (debug) toolTipText += "\n\nTimes explored: " + flags[kFLAGS.TIMES_EXPLORED_PLAINS];
-	}
-	if(buttonText.indexOf("Swamp") != -1) {
-		toolTipText = "Visit the wet swamplands. \n\nRecommended level: 12";
-		if (debug) toolTipText += "\n\nTimes explored: " + flags[kFLAGS.UNKNOWN_FLAG_NUMBER_00272];
-	}
-	if(buttonText.indexOf("Deepwoods") != -1) {
-		toolTipText = "Visit the dark, bioluminescent deepwoods. \n\nRecommended level: 5";
-		if (debug) toolTipText += "\n\nTimes explored: " + player.statusAffectv1(StatusAffects.ExploredDeepwoods);
-	}
-	if(buttonText.indexOf("Mountain") != -1) {
-		toolTipText = "Visit the mountain. \n\nRecommended level: 5";
-		if (debug) toolTipText += "\n\nTimes explored: " + player.exploredMountain;
-	}
-	if(buttonText.indexOf("High Mountain") != -1) {
-		toolTipText = "Visit the high mountains where basilisks and harpies are found. \n\nRecommended level: 10";
-		if (debug) toolTipText += "\n\nTimes explored: " + flags[kFLAGS.DISCOVERED_HIGH_MOUNTAIN];
-	}
-	if(buttonText.indexOf("Bog") != -1) {
-		toolTipText = "Visit the dark bog. \n\nRecommended level: 14";
-		if (debug) toolTipText += "\n\nTimes explored: " + flags[kFLAGS.BOG_EXPLORED];
-	}
-	if(buttonText.indexOf("Glacial Rift") != -1) {
-		toolTipText = "Visit the chilly glacial rift. \n\nRecommended level: 16";
-		if (debug) toolTipText += "\n\nTimes explored: " + flags[kFLAGS.DISCOVERED_GLACIAL_RIFT];
-	}
-	if(buttonText.indexOf("Volcanic Crag") != -1) {
-		toolTipText = "Visit the volcanic crag. \n\nRecommended level: 20";
-	}
-	if(buttonText.indexOf("Savannah") != -1) {
-		toolTipText = "Visit the savannah. \n\nRecommended level: 14";
-	}
-	//PLACE MENU
-	if(buttonText.indexOf("Bazaar") != -1) {
-		toolTipText = "Visit the Bizarre Bazaar where the demons and corrupted beings hang out.";
-	}
-	if(buttonText.indexOf("Boat") != -1) {
-		toolTipText = "Get on the boat and explore the lake. \n\nRecommended level: 4";
-	}
-	if (buttonText.indexOf("Cathedral") != -1) {
-		if (flags[kFLAGS.GAR_NAME] != 0) toolTipText = "Visit the ruined cathedral where " + flags[kFLAGS.GAR_NAME] + " resides.";
-		else toolTipText = "Visit the ruined cathedral you've recently discovered.";
-	}
-	if(buttonText.indexOf("Dungeons") != -1) {
-		toolTipText = "Delve into dungeons.";
-	}
-	if(buttonText.indexOf("Farm") != -1 && flags[kFLAGS.IN_INGNAM] <= 0) {
-		toolTipText = "Visit Whitney's farm.";
-	}
-	if(buttonText.indexOf("Owca") != -1) {
-		toolTipText = "Visit the sheep village of Owca, known for its pit where a person is hung on the pole weekly to be gang-raped by the demons.";
-	}
-	if(buttonText.indexOf("Salon") != -1) {
-		toolTipText = "Visit the salon for hair services.";
-	}
-	if(buttonText.indexOf("Tel'Adre") != -1) {
-		toolTipText = "Visit the city of Tel'Adre in desert, easily recognized by the massive tower.";
-	}
-	if(buttonText.indexOf("Town Ruins") != -1) {
-		toolTipText = "Visit the village ruins.";
-	}
-	if(buttonText.indexOf("Oasis Tower") != -1) {
-		toolTipText = "Visit the ruined tower in the high mountains where Minerva resides.";
-	}
-	//DUNGEONS
-	if(buttonText.indexOf("Factory") != -1) {
-		toolTipText = "Visit the demonic factory in the mountains.";
-		if (flags[kFLAGS.FACTORY_SHUTDOWN] > 0) toolTipText += "\n\nYou've managed to shut down the factory.";
-		if (dungeons.checkFactoryClear()) toolTipText += "\n\nCLEARED!";
-	}
-	if(buttonText.indexOf("Deep Cave") != -1) {
-		toolTipText = "Visit the cave you've found in the Deepwoods.";
-		if (flags[kFLAGS.DEFEATED_ZETAZ] > 0) toolTipText += "\n\nZetaz lived in the cave until you've defeated him.";
-		if (dungeons.checkDeepCaveClear()) toolTipText += "\n\nCLEARED!";
-	}
-	if(buttonText.indexOf("Stronghold") != -1) {
-		toolTipText = "Visit the stronghold in the high mountains that belongs to Lethice, the demon queen.";
-		if (flags[kFLAGS.LETHICE_DEFEATED] > 0) toolTipText += "\n\nYou have slain Lethice and put an end to the demonic threats. Congratulations, you've beaten the main story!";
-		if (dungeons.checkLethiceStrongholdClear()) toolTipText += "\n\nCLEARED!";
-	}
-	if(buttonText.indexOf("Desert Cave") != -1) {
-		toolTipText = "Visit the cave you've found in the desert.";
-		if (flags[kFLAGS.SAND_WITCHES_COWED] + flags[kFLAGS.SAND_WITCHES_FRIENDLY] > 0) toolTipText += "\n\nFrom what you've known, this is the source of the Sand Witches.";
-		if (dungeons.checkSandCaveClear()) toolTipText += "\n\nCLEARED!";
-	}
-	if(buttonText.indexOf("Phoenix Tower") != -1) {
-		toolTipText = "Re-visit the tower you went there as part of Helia's quest.";
-		if (dungeons.checkPhoenixTowerClear()) toolTipText += "\n\nYou've helped Helia in the quest and resolved the problems. \n\nCLEARED!";
-	}
-	//FOLLOWERS
-	//Ember
-	if(buttonText.indexOf("Ember") != -1) {
-		toolTipText = "Check up on Ember the dragon-" + (flags[kFLAGS.EMBER_ROUNDFACE] == 0 ? "morph" : flags[kFLAGS.EMBER_GENDER] == 1 ? "boy" : "girl" ) + ".";
-	}
-	//Rathazul
-	if(buttonText.indexOf("Rathazul") != -1) {
-		toolTipText = "Visit with Rathazul to see what alchemical supplies and services he has available at the moment.";
-	}
-	//Jojo
-	if(buttonText == "Jojo") {
-		if(monk >= 5) toolTipText = "Call your corrupted pet into camp in order to relieve your desires in a variety of sexual positions?  He's ever so willing after your last encounter with him.";
-		else toolTipText = "Go find Jojo around the edges of your camp and meditate with him or talk about watch duty.";
-	}
-	//Valeria
-	if(buttonText == "Valeria") {
-		toolTipText = "Visit Valeria the goo-girl.";
-	}
-	//Marble
-	if(buttonText == "Marble") {
-		toolTipText = "Go to Marble the cowgirl for talk and companionship.";
-	}
-	if(buttonText.indexOf("Marble (Sex)") != -1) {
-		toolTipText = "Get with marble for a quick cuddle and some sex.";
-	}
-	}
-	//-----------------
-	//-- FOLLOWER INTERACTIONS
-	//-----------------
-	//Rathazul
-	if (kGAMECLASS.tooltipLoc == "Rathazul") {
-		if (buttonText == "Armor") {
-			toolTipText = "Ask Rathazul to make an armour for you.";
-		}
-		if (buttonText == "Debimbo") {
-			toolTipText = "Ask Rathazul to make a debimbofying potion for you. \n\nCost: 250 Gems and 5 Scholar Teas.";
-		}
-		if (buttonText == "Buy Dye") {
-			toolTipText = "Ask him to make a dye for you. \n\nCost: 50 Gems.";
-		}
-		if (buttonText == "Purify") {
-			toolTipText = "Ask him to purify any tainted potions. \n\nCost: 20 Gems.";
-		}
-		if (buttonText == "Pure Potion") {
-			toolTipText = "Ask him to brew a purification potion for Minerva.";
-		}
-		if (buttonText == "Milk Potion") {
-			toolTipText = "Ask him to brew a special milk potion. \n\nCost: 250 Gems \nNeeds 5 Lactaids and 2 Purified LaBovas.";
-		}
-		if (buttonText == "Lethicite") {
-			toolTipText = "Ask him if he can make use of that lethicite you've obtained from Marae.";
-		}
-	}
-	//Jojo - Moved to addButton in JojoScene.as
-	//Valeria - Moved to addButton in Valeria.as
-	//-----------------
-	//-- ENVIRONMENT INTERACTIONS
-	//-----------------
-	//Lizan Rogue - Moved to LizanRogueScene.as
-	//-----------------
-	//-- DUNGEON INTERACTIONS
-	//-----------------
-	//Moved to dungeon interactions.
-	//-----------------
-	//-- LEVEL UP SCREEN 
-	//-----------------
-	if(buttonText == "Add Strength") {
-		toolTipText = "Add 1 to strength.";
-	}	
-	if(buttonText == "Sub Strength") {
-		toolTipText = "Subtract 1 from strength.";
-	}	
-	if(buttonText == "Add Tough") {
-		toolTipText = "Add 1 to toughness.";
-	}	
-	if(buttonText == "Sub Tough") {
-		toolTipText = "Subtract 1 from toughness.";
-	}	
-	if(buttonText == "Add Speed") {
-		toolTipText = "Add 1 to speed.";
-	}	
-	if(buttonText == "Sub Speed") {
-		toolTipText = "Subtract 1 from speed.";
-	}	
-	if(buttonText == "Add Intel") {
-		toolTipText = "Add 1 to intelligence.";
-	}	
-	if(buttonText == "Sub Intel") {
-		toolTipText = "Subtract 1 from intelligence.";
-	}
-
-	//-----------------
-	//-- TITLE SCREEN 
-	//-----------------
-	//Main menu
-	if(buttonText.indexOf("New Game") != -1) {
-		toolTipText = "Start your new adventure.";
-	}
-	if(buttonText.indexOf("Credits") != -1) {
-		toolTipText = "See a list of all the cool people who have contributed to content for this game!";
-	}
-	if(buttonText.indexOf("Instructions") != -1) {
-		toolTipText = "How to play.  Starting tips.  And hotkeys for easy left-handed play...";
-	}
-	if(buttonText.indexOf("Achievements") != -1) {
-		toolTipText = "View all achievements you have unlocked so far.";
-	}
-	if(buttonText.indexOf("Settings") != -1) {
-		toolTipText = "Configure game settings and enable cheats.";
-	}
+	//------------
+	// TITLE SCREEN 
+	//------------
 	if(buttonText.indexOf("ASPLODE") != -1) {
 		toolTipText = "MAKE SHIT ASPLODE";
 	}
@@ -1496,7 +1130,7 @@ public function createCallBackFunction2(func:Function,...args):Function
  * @param	arg3 Pass argument #1 to func1 parameter.
  * @param	toolTipText The text that will appear on tooltip when the mouse goes over the button.
  */
-public function addButton(pos:int, text:String = "", func1:Function = null, arg1:* = -9000, arg2:* = -9000, arg3:* = -9000, toolTipText:String = ""):void {
+public function addButton(pos:int, text:String = "", func1:Function = null, arg1:* = -9000, arg2:* = -9000, arg3:* = -9000, toolTipText:String = "", toolTipHeader:String = ""):void {
 	if (func1==null) return;
 	var callback:Function;
 
@@ -1508,7 +1142,7 @@ public function addButton(pos:int, text:String = "", func1:Function = null, arg1
 	*/
 	//Removes sex-related button in SFW mode.
 	if (flags[kFLAGS.SFW_MODE] > 0) {
-		if (text.indexOf("Sex") != -1 || text.indexOf("Threesome") != -1 ||  text.indexOf("Foursome") != -1 || text == "Watersports" || text == "Make Love" || text == "Use Penis" || text == "Use Vagina" || text.indexOf("Fuck") != -1 || text.indexOf("Ride") != -1 || (text.indexOf("Mount") != -1 && text.indexOf("Mountain") == -1) || text.indexOf("Vagina") != -1 || (tooltipLoc == "Sophie" && text == "Special")) {
+		if (text.indexOf("Sex") != -1 || text.indexOf("Threesome") != -1 ||  text.indexOf("Foursome") != -1 || text == "Watersports" || text == "Make Love" || text == "Use Penis" || text == "Use Vagina" || text.indexOf("Fuck") != -1 || text.indexOf("Ride") != -1 || (text.indexOf("Mount") != -1 && text.indexOf("Mountain") == -1) || text.indexOf("Vagina") != -1) {
 			trace("Button removed due to SFW mode.");
 			return;
 		}
@@ -1516,9 +1150,14 @@ public function addButton(pos:int, text:String = "", func1:Function = null, arg1
 	callback = createCallBackFunction(func1, arg1, arg2, arg3);
 
 	if (toolTipText == "") toolTipText = getButtonToolTipText(text);
-	mainView.showBottomButton( pos, text, callback, toolTipText );
+	if (toolTipHeader == "") toolTipHeader = getButtonToolTipHeader(text);
+	mainView.showBottomButton(pos, text, callback, toolTipText, toolTipHeader);
 	//mainView.setOutputText( currentText );
 	flushOutputTextToGUI();
+}
+
+public function setButtonTooltip(index:int, toolTipHeader:String = "", toolTipText:String = ""):void {
+	mainView.showBottomButton(index, mainView.bottomButtons[index].labelText, mainView.bottomButtons[index].callback, toolTipText, toolTipHeader);
 }
 
 public function hasButton(arg:*):Boolean {
@@ -1533,12 +1172,6 @@ public function hasButton(arg:*):Boolean {
  * @param	arg The position to remove a button. (First row is 0-4, second row is 5-9, third row is 10-14.)
  */
 public function removeButton(arg:*):void {
-	function _removeButtonAction( index :int ):void	// Uh... should this function be empty?
-	{
-		// funcs[ index ] = null;
-		// args[ index ] = -9000;
-	}
-
 	var buttonToRemove:int = 0;
 	if(arg is String) {
 		buttonToRemove = mainView.indexOfButtonWithLabel( arg as String );
@@ -1547,8 +1180,6 @@ public function removeButton(arg:*):void {
 		if(arg < 0 || arg > 14) return;
 		buttonToRemove = Math.round(arg);
 	}
-	
-	// _removeButtonAction( buttonToRemove );
 	mainView.hideBottomButton( buttonToRemove );
 }
 
@@ -1950,14 +1581,14 @@ public function invertGo():void{
  */
 public function statScreenRefresh():void {
 	mainView.statsView.show(); // show() method refreshes.
-	styleHack.refreshStats();
+	mainViewHack.refreshStats();
 }
 /**
  * Show the stats pane. (Name, stats and attributes)
  */
 public function showStats():void {
 	mainView.statsView.show();
-	styleHack.refreshStats();
+	mainViewHack.refreshStats();
 	mainViewHack.tweenInStats();
 }
 /**
@@ -1980,8 +1611,6 @@ public function hideMenus():void {
  */
 public function hideUpDown():void {
 	mainView.statsView.hideUpDown();
-	mainView.hungerUp.visible = false;
-	mainView.hungerDown.visible = false;
 	//Clear storage values so up/down arrows can be properly displayed
 	oldStats.oldStr = 0;
 	oldStats.oldTou = 0;
@@ -1989,8 +1618,11 @@ public function hideUpDown():void {
 	oldStats.oldInte = 0;
 	oldStats.oldLib = 0;
 	oldStats.oldSens = 0;
+	oldStats.oldCor = 0;  
+	oldStats.oldHP = 0;
 	oldStats.oldLust = 0;
-	oldStats.oldCor = 0;        
+	oldStats.oldFatigue = 0;
+	oldStats.oldHunger = 0;
 }
 
 public function physicalCost(mod:Number):Number {
@@ -2083,13 +1715,15 @@ public function displayStats(e:MouseEvent = null):void
 {
 	spriteSelect(-1);
 	clearOutput();
-	
+	displayHeader("Stats");
 	// Begin Combat Stats
 	var combatStats:String = "";
 	
 	if (player.hasKeyItem("Bow") >= 0 || player.hasKeyItem("Kelt's Bow") >= 0)
 		combatStats += "<b>Bow Skill:</b> " + Math.round(player.statusAffectv1(StatusAffects.Kelt)) + " / 100\n";
 		
+	combatStats += "<b>Damage Resistance:</b> " + (100 - Math.round(player.damagePercent(true))) + "-" + (100 - (Math.round(player.damagePercent(true)) - (player.tou < 100 ? player.tou * 0.2 : 20))) + "% (Higher is better.)\n";
+
 	combatStats += "<b>Lust Resistance:</b> " + (100 - Math.round(lustPercent())) + "% (Higher is better.)\n";
 	
 	combatStats += "<b>Spell Effect Multiplier:</b> " + (100 * spellMod()) + "%\n";
@@ -2736,8 +2370,11 @@ public function stats(stre:Number, toug:Number, spee:Number, intel:Number, libi:
 		oldStats.oldInte = player.inte;
 		oldStats.oldLib = player.lib;
 		oldStats.oldSens = player.sens;
-		oldStats.oldLust = player.lust;
 		oldStats.oldCor = player.cor;
+		oldStats.oldHP = player.HP;
+		oldStats.oldLust = player.lust;
+		oldStats.oldFatigue = player.fatigue;
+		oldStats.oldHunger = player.hunger;
 	}
 	//MOD CHANGES FOR PERKS
 	//Bimbos learn slower
@@ -2875,9 +2512,36 @@ public function stats(stre:Number, toug:Number, spee:Number, intel:Number, libi:
 	if(player.lust < 0) player.lust = 0;
 
 	//Refresh the stat pane with updated values
-	mainView.statsView.showUpDown();
+	//mainView.statsView.showUpDown();
+	showUpDown();
 	statScreenRefresh();
 }
+	
+public function showUpDown():void { //Moved from StatsView.
+	function _oldStatNameFor(statName:String):String {
+		return 'old' + statName.charAt(0).toUpperCase() + statName.substr(1);
+	}
+
+	var statName:String,
+		oldStatName:String,
+		allStats:Array;
+
+	mainView.statsView.upDownsContainer.visible = true;
+
+	allStats = ["str", "tou", "spe", "inte", "lib", "sens", "cor", "HP", "lust", "fatigue", "hunger"];
+
+	for each(statName in allStats) {
+		oldStatName = _oldStatNameFor(statName);
+
+		if(player[statName] > oldStats[oldStatName]) {
+			mainView.statsView.showStatUp(statName);
+		}
+		if(player[statName] < oldStats[oldStatName]) {
+			mainView.statsView.showStatDown(statName);
+		}
+	}
+}
+
 public function range(min:Number, max:Number, round:Boolean = false):Number 
 {
 	var num:Number = (min + Math.random() * (max - min));
@@ -2942,17 +2606,17 @@ public function doNothing():void {
 }
 
 public function spriteSelect(choice:Number = 0):void {
+	var type:int = flags[kFLAGS.SPRITE_STYLE]; //0 for new, 1 for old.
 	if (flags[kFLAGS.SHOW_SPRITES_FLAG] == 0)
 	{
-		//if (flags[kFLAGS.USE_OLD_SPRITES] >= 1) choice += 1000;
-		mainView.selectSprite( choice );
+		mainView.selectSprite(choice, type);
 	}
 	else
 	{
 		if (choice >= 0)
 		{
 			trace ("hiding sprite because flags");
-			mainView.selectSprite( -1 );
+			mainView.selectSprite(-1);
 		}
 	}
 }

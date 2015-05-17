@@ -1098,12 +1098,12 @@ public function urtaSpecials():void {
 		return;
 	}
 	menu();
-	addButton(0, "Combo", urtaComboAttack);
-	addButton(1, "Vault", urtaVaultAttack);
-	addButton(2, "Sidewinder", urtaSidewinder);
-	addButton(3, "Dirt Kick", urtaDirtKick);
-	addButton(4, "Metabolize", urtaMetabolize);
-	addButton(5, "SecondWind", urtaSecondWind);
+	addButton(0, "Combo", urtaComboAttack, null, null, null, "Make a three-hit combo.  Each attack has an extra 33% chance to miss, unless the target is blind. \n\nFatigue cost: 25");
+	addButton(1, "Vault", urtaVaultAttack, null, null, null, "Make a vaulting attack for an extra 25% damage.  Automatically crits stunned foes. \n\nFatigue cost: 20");
+	addButton(2, "Sidewinder", urtaSidewinder, null, null, null, "An attack that hits for reduced damage but has a high chance of stunning. \n\nFatigue cost: 10");
+	addButton(3, "Dirt Kick", urtaDirtKick, null, null, null, "Attempt to blind your foe with a spray of kicked dirt. \n\nFatigue cost: 5");
+	addButton(4, "Metabolize", urtaMetabolize, null, null, null, "Convert 10% of your maximum HP into fatigue.");
+	addButton(5, "SecondWind", urtaSecondWind, null, null, null, "Regain 50% of your HP, 50 fatigue, and reduce lust by 50 once per fight.", "Second Wind");
 	addButton(14, "Back", getGame().combatMenu, false);
 }
 
@@ -1137,7 +1137,7 @@ private function urtaSecondWind():void {
 private function urtaComboAttack():void {
 	if(player.findStatusAffect(StatusAffects.Attacks) < 0) {
 		clearOutput();
-		if(player.fatigue + 25 > 100) {
+		if(player.fatigue + 25 > player.maxFatigue()) {
 			outputText("You are too fatigued to use that attack!");
 //Gone			menuLoc = 3;
 //			doNext(getGame().combatMenu);
@@ -1259,7 +1259,7 @@ private function urtaComboAttack():void {
 //Dirt Kick
 private function urtaDirtKick():void {
 	clearOutput();
-	if(player.fatigue + 5 > 100) {
+	if(player.fatigue + 5 > player.maxFatigue()) {
 		outputText("You are too fatigued to use that ability!");
 //Gone		menuLoc = 3;
 //		doNext(getGame().combatMenu);
@@ -1292,7 +1292,7 @@ private function urtaDirtKick():void {
 //SideWinder: 70% damage + stun chance
 private function urtaSidewinder():void {
 	clearOutput();
-	if(player.fatigue + 10 > 100) {
+	if(player.fatigue + 10 > player.maxFatigue()) {
 		outputText("You are too fatigued to use that attack!");
 //Gone		menuLoc = 3;
 //		doNext(getGame().combatMenu);
@@ -1407,7 +1407,7 @@ private function urtaSidewinder():void {
 //Vault: Use the halberd to support her weight and deliver a high power kick to the enemy, deals 15% more damage. If the enemy is stunned, auto-critical. This is like the move she uses during the fight against the wolf in that scene at Tel'Adre.
 private function urtaVaultAttack():void {
 	clearOutput();
-	if(player.fatigue + 20 > 100) {
+	if(player.fatigue + 20 > player.maxFatigue()) {
 		outputText("You are too fatigued to use that attack!");
 //Gone		menuLoc = 3;
 //		doNext(getGame().combatMenu);
@@ -1628,7 +1628,7 @@ private function urtaWinFucksSirius():void {
 	outputText("\n\nYou shake your head, feeling kind of dizzy, but good... also, still kind of horny.  Wow, he looks really cute with his face splashed with semen... and his belly starting to bulge from the load you shot down his throat...  That's so... hot...  Your cock starts to harden up again, anticipating your intentions.  Funny... you vaguely remember needing to do something... something besides fucking this sexy snake here.  Eh, it can wait; round two, coming up!");
 
 	outputText("\n\nSirius coughs pathetically, spitting a small gob of seed in the process.  Then he licks his lips and looks up, only to meet your hungry stare.  \"<i>Why are you looking at me like that?  No... oh nononononono... Wa - GH!</i>\"  You cram his mouth full again, already humping his face as if your life depends on it... mmm, his throat feels so good wrapped around your cock...");
-	dynStats("lus=", 100, "resisted", false);
+	dynStats("lus=", player.maxLust(), "resisted", false);
 	//Next Page button to trigger scene finish
 	menu();
 	addButton(0,"Next",fuckSiriusRadioII);
@@ -2706,7 +2706,7 @@ private function deadGodsDreaming():void {
 	outputText("\n\nThen you awake with a start, still kneeling before the unmoving statue.  Was it all a dream?  You don't know...  Your head is throbbing like mad, and you can't think clearly.  But even as the pain dims, you become aware of another, more pressing matter.  Lust.  That familiar yearning burns inside your arm-length prick like a raging inferno, the tower of equine fuckmeat thrusting boldly before you and steadily gushing precum onto the ground.  Naked, hungry NEED screams and claws and gibbers behind your eyes... " + player2.short + ", you must have " + player2.short + "!");
 
 	outputText("\n\nAbsently licking drool from your lips, you stagger upright and, using your halberd for support, start loping home from the shrine.  In your wake you leave a slug-like trail of sexual lubricants, too focused on finding and fucking your lover to care about the glistening slime caking your dick and plastering your inner thighs.");
-	dynStats("lus=", 100, "resisted", false);
+	dynStats("lus=", player.maxLust(), "resisted", false);
 	//Revert to PC control and change page to Urta Arrives At Camp
 	menu();
 	addButton(0,"Next",urtaArrivesAtCampForFukks);

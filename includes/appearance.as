@@ -53,6 +53,7 @@
 	race = player.race();
 	//Discuss race
 	clearOutput();
+	displayHeader("Appearance");
 	if(race != "human")	outputText("You began your journey as a human, but gave that up as you explored the dangers of this realm.  ", false);
 	//Height and race.
 	if (flags[kFLAGS.USE_METRICS] > 0) outputText("You are a " + Math.round(100 * (player.tallness * 2.54) / 100) + " centimetre tall " + player.maleFemaleHerm() + " " + race + ", with " + player.bodyType() + ".", false);
@@ -613,7 +614,7 @@
 	}
 	else if(player.tailType == TAIL_TYPE_FOX) 
 	{
-		if(player.tailVenom == 1) 
+		if(player.tailVenom <= 1) 
 			outputText("  A swishing " + player.hairColor + " fox's brush extends from your " + assDescript() + ", curling around your body - the soft fur feels lovely.");
 		else outputText("  " + Num2Text(player.tailVenom) + " swishing " + player.hairColor + " fox's tails extend from your " + assDescript() + ", curling around your body - the soft fur feels lovely.");
 	}

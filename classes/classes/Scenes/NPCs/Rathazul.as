@@ -204,7 +204,7 @@ private function rathazulWorkOffer():Boolean {
 	if (player.hasItem(useables.D_SCALE)) {
 		showArmorMenu = true;
 		totalOffers++;
-		outputText("\"<i>Oooh, is that dragon scale? If you happen to have five of these, I can work them into armor,</i>\" Rathazul says.");
+		outputText("\"<i>Oooh, is that dragon scale? If you happen to have five of these, I can work them into armor,</i>\" Rathazul says.\n\n");
 	}
 	//Marae bark armor
 	if (player.hasKeyItem("Tentacled Bark Plates") >= 0 || player.hasKeyItem("Divine Bark Plates") >= 0) showArmorMenu = true;
@@ -304,21 +304,20 @@ private function rathazulWorkOffer():Boolean {
 		doNext(camp.returnToCampUseOneHour);
 		return true;
 	}
-	kGAMECLASS.tooltipLoc = "Rathazul"
 	if(totalOffers > 0) {
 		outputText("Will you take him up on an offer or leave?", false);
 		//In camp has no time passage if left.
 		menu();
-		if (showArmorMenu) addButton(0, "Armor", rathazulArmorMenu);
-		if (debimbo > 0) addButton(1, "Debimbo", makeADeBimboDraft);
-		addButton(2,"Buy Dye",dyes);
-		if (lethiciteDefense != null) addButton(3, "Lethicite", lethiciteDefense);
-		addButton(4, "Purify", purify);
+		if (showArmorMenu) addButton(0, "Armor", rathazulArmorMenu, null, null, null, "Ask Rathazul to make an armour for you.");
+		if (debimbo > 0) addButton(1, "Debimbo", makeADeBimboDraft, null, null, null, "Ask Rathazul to make a debimbofying potion for you. \n\nCost: 250 Gems \nNeeds 5 Scholar Teas.");
+		addButton(2,"Buy Dye",dyes, null, null, null, "Ask him to make a dye for you. \n\nCost: 50 Gems.");
+		if (lethiciteDefense != null) addButton(3, "Lethicite", lethiciteDefense, null, null, null, "Ask him if he can make use of that lethicite you've obtained from Marae.");
+		addButton(4, "Purify", purify, null, null, null, "Ask him to purify any tainted potions. \n\nCost: 20 Gems.");
 		if (player.hasItem(consumables.PURHONY, 1) && player.hasItem(consumables.C__MINT, 1) && player.hasItem(consumables.PURPEAC, 1) && player.hasKeyItem("Rathazul's Purity Potion") < 0 &&(flags[kFLAGS.MINERVA_PURIFICATION_RATHAZUL_TALKED] == 2 && flags[kFLAGS.MINERVA_PURIFICATION_PROGRESS] < 10)) {
-			addButton(5, "Pure Potion", rathazulMakesPurifyPotion);
+			addButton(5, "Pure Potion", rathazulMakesPurifyPotion, null, null, null, "Ask him to brew a purification potion for Minerva.");
 		}
 		if (player.hasItem(consumables.LACTAID, 5) && player.hasItem(consumables.P_LBOVA, 2)) {
-			addButton(6, "Pro Lactaid", rathazulMakesMilkPotion);
+			addButton(6, "Pro Lactaid", rathazulMakesMilkPotion, null, null, null, "Ask him to brew a special milk potion. \n\nCost: 250 Gems \nNeeds 5 Lactaids and 2 Purified LaBovas.");
 		}
 		if (player.hasItem(consumables.EQUINUM, 2) && player.hasItem(consumables.MINOBLO, 1) && player.gems >= 100) addButton(7, "Taurinum", makeTaurPotion);
 		if (reductos != null) addButton(8, "Reducto", reductos);
@@ -582,16 +581,13 @@ private function commissionSilkArmorForReal():void {
 	spriteSelect(49);
 	clearOutput();
 	outputText("You sort 500 gems into a pouch and toss them to Rathazul, along with the rest of the webbing.  The wizened alchemist snaps the items out of the air with lightning-fast movements and goes to work immediately.  He bustles about with enormous energy, invigorated by the challenging task before him.  It seems Rathazul has completely forgotten about you, but as you turn to leave, he calls out, \"<i>What did you want me to make?  A mage's robe or some nigh-impenetrable armor?  Or undergarments if you want.</i>\"\n\n", false);
-	player.gems -= 500;
-	statScreenRefresh();
-	player.destroyItems(useables.T_SSILK, 5);
 	menu();
 	addButton(0, "Armor", chooseArmorOrRobes, 1, null, null, armors.SSARMOR.description);
 	addButton(1, "Robes", chooseArmorOrRobes, 2, null, null, armors.SS_ROBE.description);
 	addButton(2, "Bra", chooseArmorOrRobes, 3, null, null, undergarments.SS_BRA.description);
 	addButton(3, "Panties", chooseArmorOrRobes, 4, null, null, undergarments.SSPANTY.description);
 	addButton(4, "Loincloth", chooseArmorOrRobes, 5, null, null, undergarments.SS_LOIN.description);
-
+	addButton(14, "Nevermind", declineSilkArmorCommish);
 }
 
 private function declineSilkArmorCommish():void {
@@ -603,6 +599,9 @@ private function declineSilkArmorCommish():void {
 
 public function chooseArmorOrRobes(robeType:int):void {
 	spriteSelect(49);
+	player.destroyItems(useables.T_SSILK, 5);
+	player.gems -= 500;
+	statScreenRefresh();
 	outputText("Rathazul grunts in response and goes back to work.  ", true);
 	if (player.findStatusAffect(StatusAffects.CampRathazul) >= 0)
 	{
@@ -711,39 +710,48 @@ private function craftDragonscaleArmor():void {
 	addButton(2, "Bra", craftDragonscaleArmorForReal, 2, null, null, undergarments.DS_BRA.description);
 	addButton(3, "Thong", craftDragonscaleArmorForReal, 3, null, null, undergarments.DSTHONG.description);
 	addButton(4, "Loincloth", craftDragonscaleArmorForReal, 4, null, null, undergarments.DS_LOIN.description);
+	addButton(14, "Nevermind", rathazulArmorMenu);
 }
 private function craftDragonscaleArmorForReal(type:int = 0):void {
 	spriteSelect(49);
 	clearOutput();
+	var itype:ItemType;
+	switch(type) {
+		case 0: //Armor
+			outputText(images.showImage("rathazul-craft-dragonscalearmor"));
+			outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the armor.  ");
+			outputText("The armor is red and the breastplate has nicely decorated pauldrons to give an imposing looks. You touch the armor and feel the scaly texture. \"<i>It's quite flexible and should offer very good protection,</i>\" Rathazul says.", false);
+			itype = armors.DSCLARM;
+			break;
+		case 1: //Robes, not used
+			itype = armors.DSCLARM;
+			break;
+		case 2: //Bra
+			outputText(images.showImage("rathazul-craft-dragonscalebra"));
+			outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the bra.  ");
+			outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
+			itype = undergarments.DS_BRA;
+			break;
+		case 3: //Thong
+			outputText(images.showImage("rathazul-craft-dragonscalethong"));
+			outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the thong.  ");
+			outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
+			itype = undergarments.DSTHONG;
+			break;
+		case 4: //Loincloth
+			outputText(images.showImage("rathazul-craft-dragonscaleloincloth"));
+			outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the loincloth.  ");
+			outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
+			itype = undergarments.DS_LOIN;
+			break;
+		default:
+			outputText("Something bugged! Please report this bug to Kitteh6660.");
+			itype = armors.DSCLARM;
+			break;
+	}
 	player.destroyItems(useables.D_SCALE, 5);
-	player.addStatusValue(StatusAffects.MetRathazul,2,1);
-	if (type == 0) { //Armor
-		outputText(images.showImage("rathazul-craft-dragonscalearmor"));
-		outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the armor.  ");
-		outputText("It has nicely decorated pauldrons to give an imposing looks. You touch the armor and feel the scaly texture. \"<i>It's quite flexible and should offer very good protection,</i>\" Rathazul says.", false);
-		inventory.takeItem(armors.DSCLARM, returnToRathazulMenu);
-	}
-	else if (type == 1) { //Robes, not used.
-
-	}
-	else if (type == 2) { //Bra
-		outputText(images.showImage("rathazul-craft-dragonscalebra"));
-		outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the bra.  ");
-		outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
-		inventory.takeItem(undergarments.DS_BRA, returnToRathazulMenu);
-	}
-	else if (type == 3) { //Thong
-		outputText(images.showImage("rathazul-craft-dragonscalethong"));
-		outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the thong.  ");
-		outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
-		inventory.takeItem(undergarments.DSTHONG, returnToRathazulMenu);
-	}
-	else if (type == 4) { //Loincloth
-		outputText(images.showImage("rathazul-craft-dragonscaleloincloth"));
-		outputText("The rat takes the scales and works on his bench for an hour while you wait.  Once he has finished, Ratzhul is beaming with pride, \"<i>I think you'll be pleased. Go ahead and take a look.</i>\"\n\nHe hands you the loincloth.  ");
-		outputText("It's nicely textured with dragon scales. \"<i>I've used leather straps to maintain the flexibility. It should be comfortable and protective,</i>\" Rathazul says.", false);
-		inventory.takeItem(undergarments.DS_LOIN, returnToRathazulMenu);
-	}
+	player.addStatusValue(StatusAffects.MetRathazul, 2, 1);
+	inventory.takeItem(itype, returnToRathazulMenu);
 }
 
 private function craftMaraeArmor(divine:Boolean = false):void {

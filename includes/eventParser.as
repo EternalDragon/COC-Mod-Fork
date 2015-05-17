@@ -4,6 +4,7 @@ import classes.Player;
 import classes.Items.Consumable;
 import classes.Scenes.Areas.Lake;
 import classes.Scenes.Camp.ScarredBlade;
+import coc.view.MainView;
 
 //Used to jump the fuck out of pregnancy scenarios for menus.
 //const EVENT_PARSER_ESCAPE:int = 800;
@@ -384,7 +385,6 @@ public function doSystem(eventNo:Number):void {
 		case 74:
 			//Camp followers screen
 			doNext(1);
-			kGAMECLASS.tooltipLoc = ""
 			camp.campFollowers();
 			return;
 
@@ -818,6 +818,12 @@ public function goNext(time:Number, needNext:Boolean):Boolean  {
 			inventory.takeItem(player.setUndergarment(UndergarmentLib.NOTHING, 1), playerMenu);
 			return true;
 		}
+	}
+	//Unequip shield if you're wielding a large weapon.
+	if (player.weaponPerk == "Large" && player.shield != ShieldLib.NOTHING) {
+		outputText("Your current weapon requires the use of two hands. As such, your shield has been unequipped automatically. ");
+		inventory.takeItem(player.setShield(ShieldLib.NOTHING), playerMenu);
+		return true;
 	}
 	// update cock type as dog/fox depending on whether the player resembles one more then the other.
 	// Previously used to be computed directly in cockNoun, but refactoring prevents access to the Player class when in cockNoun now.
